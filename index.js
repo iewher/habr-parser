@@ -38,36 +38,46 @@ const parser = async () => {
 
   bar1.update(60);
 
-  const array_combined = array_name.map(
-    (name, index) => `${name} - https://career.habr.com${array_links[index]}`
+  const links_combined = array_name.map(
+    (name, index) => `${name} - https://career.habr.com${array_links[index]}}`
   );
-  fs.writeFileSync("vacancies.txt", array_combined.join("\n"), "utf-8");
+  fs.writeFileSync("vacancies.txt", links_combined.join("\n"), "utf-8");
 
   const new_pages = [];
+  const all_sites = [];
+
   for (let i = 0; i < array_links.length; i++) {
     const new_page = await browser.newPage();
     await new_page.goto(`https://career.habr.com${array_links[i]}`);
-    // const array_mail = await page.evaluate(() => {
-    //   const mail = Array.from(document.querySelectorAll(".link-comp"), (el) =>
-    //     el.getAttribute("href")
-    //   );
 
-    //   return mail;
-    // });
+    const array_site = await new_page.evaluate(() => {
+      const siteElement = document.querySelector(".company_site");
+      return siteElement ? siteElement.innerText : null;
+    });
 
-    // console.log(array_mail);
+    all_sites.push(array_site);
     new_pages.push(new_page);
+
+    await new_page.close();
   }
+
+  const site_urls = all_sites.map((site) => "https://" + site);
+  fs.writeFileSync("site.txt", site_urls.join("\n"), "utf-8");
+
   await Promise.all(new_pages);
 
   bar1.update(100);
   bar1.stop();
 
   await browser.close();
-  console.log("Создан текстовый файл");
+  console.log("Создан текстовый файл vacancies.txt");
+  console.log("Создан текстовый файл site.txt");
   console.log("Парсер закончил работу успешно");
 };
 
 parser();
 
-//TODO: Переходим по каждой ссылке при парсинге страницы, забираем оттуда сайт (на habr career есть у каждой компании), переходим на страницу, забираем DOM обьект с словом mailto
+//TODO: открывает каждую ссылку
+//TODO: забирает DOM обьект по классу company_site и забираем оттуда текст
+//TODO: записываем текст в отдельный файл site.txt
+//TODO: переходим по каждой ссылке из site.txt
