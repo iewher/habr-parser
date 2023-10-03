@@ -1,3 +1,5 @@
 /node_modules
 /vacancies.txt
-/site.txt
+/sites.txt
+/log.txt
+/error.txt
