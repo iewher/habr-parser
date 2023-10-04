@@ -3,6 +3,15 @@ const fs = require("fs");
 const cliProgress = require("cli-progress");
 
 const parser = async () => {
+  const new_pages = [];
+  const all_sites = [];
+  const all_mail = [];
+  const data = {
+    vacancies: [],
+    sites: [],
+    mail: [],
+  };
+
   const bar1 = new cliProgress.SingleBar(
     {
       format:
@@ -10,9 +19,11 @@ const parser = async () => {
     },
     cliProgress.Presets.shades_classic
   );
+
   const time = new Date();
-  const date = (`[${time.getHours()}h : ${time.getMinutes()}m : ${time.getSeconds()}s]`)
-  const logo = (`
+  const date = `[${time.getHours()}h : ${time.getMinutes()}m : ${time.getSeconds()}s]`;
+
+  const logo = `
   ##     ## ##     ## ########     ###    ########   ######  ######## ########  
   ##     ## ##     ## ##     ##   ## ##   ##     ## ##    ## ##       ##     ## 
   ##     ## ##     ## ##     ##  ##   ##  ##     ## ##       ##       ##     ## 
@@ -20,9 +31,11 @@ const parser = async () => {
   ##     ## ##     ## ##        ######### ##   ##         ## ##       ##   ##   
   ##     ## ##     ## ##        ##     ## ##    ##  ##    ## ##       ##    ##  
   ##     ## ##     ## ##        ##     ## ##     ##  ######  ######## ##     ## 
-  `)
+  `;
+
   console.log(logo);
   console.log("Парсер запущен\n");
+
   bar1.start(100, 0);
 
   const browser = await puppeteer.launch({ headless: false });
@@ -56,10 +69,9 @@ const parser = async () => {
     (name, index) =>
       `${index + 1}. ${name} - https://career.habr.com${array_links[index]}`
   );
-  fs.writeFileSync("vacancies.txt", links_combined.join("\n"), "utf-8");
 
-  const new_pages = [];
-  const all_sites = [];
+  data.vacancies = links_combined.map((link) => link.replace(/ - /, " - "));
+  fs.writeFileSync("data.json", JSON.stringify(data, null, 2), "utf-8");
 
   await page.close();
 
@@ -67,14 +79,15 @@ const parser = async () => {
     const new_page = await browser.newPage();
     await new_page.goto(`https://career.habr.com${array_links[i]}`);
 
-    //TODO: добавить фильтрацию сайтов по названию, без повторов
-
     const array_site = await new_page.evaluate(() => {
       const site_company = document.querySelector(".company_site");
       return site_company ? site_company.innerText : null;
     });
 
-    all_sites.push(array_site);
+    if (array_site && !all_sites.includes(array_site)) {
+      all_sites.push(array_site);
+    }
+
     new_pages.push(new_page);
 
     bar1.update(60 + ((i + 1) / array_links.length) * 20);
@@ -82,10 +95,12 @@ const parser = async () => {
     await new_page.close();
   }
 
+  data.sites = all_sites;
+  fs.writeFileSync("data.json", JSON.stringify(data, null, 2), "utf-8");
+
   const site_urls = all_sites.map(
     (site, index) => `${index + 1}. https://${site}`
   );
-  fs.writeFileSync("sites.txt", site_urls.join("\n"), "utf-8");
 
   await Promise.all(new_pages);
 
@@ -93,12 +108,26 @@ const parser = async () => {
     try {
       const new_page = await browser.newPage();
       await new_page.goto(`https://${all_sites[i]}`);
+
       fs.appendFileSync(
         "log.txt",
         `${date} - Страница успешно открыта ${all_sites[i]}\n`,
         "utf-8"
       );
-      // await new_page.close();
+
+      const hrefValue = await new_page.evaluate(() => {
+        const elementsWithHref = document.querySelectorAll('[href*="mailto"]');
+        if (elementsWithHref.length > 0) {
+          return elementsWithHref[0].getAttribute("href");
+        }
+        return null;
+      });
+
+      if (hrefValue !== null) {
+        all_mail.push(hrefValue.replace(/mailto:/g, ""));
+      }
+
+      await new_page.close();
     } catch (error) {
       fs.appendFileSync(
         "error.txt",
@@ -110,15 +139,14 @@ const parser = async () => {
     bar1.update(80 + ((i + 1) / all_sites.length) * 20);
   }
 
+  data.mail = all_mail;
+  fs.writeFileSync("data.json", JSON.stringify(data, null, 2), "utf-8");
+
   bar1.update(100);
   bar1.stop();
 
   await browser.close();
-  console.log("Созданы текстовые файлы vacancies.tst, site.txt");
-  console.log("Создан log.txt");
-  console.log(
-    "Если с какой-то итерацией возникла проблема, она будет отображена в error.txt"
-  );
+  console.log("Создан файл data.json");
   console.log("Парсер закончил работу успешно");
 };
 
