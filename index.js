@@ -12,6 +12,8 @@ const parser = async () => {
     sites: [],
     mail: [],
   };
+  let links_combined = [];
+  let all_links = [];
 
   const bar1 = new cliProgress.SingleBar(
     {
@@ -42,44 +44,63 @@ const parser = async () => {
   const browser = await puppeteer.launch({ headless: false });
   bar1.update(20);
 
-  const page = await browser.newPage();
-  await page.goto(
-    `https://career.habr.com/vacancies?page=1&q=react&type=suitable`
-  );
-  bar1.update(40);
+  for (let current_page = 1; current_page <= 5; current_page++) {
+    const pagePromise = (new_page = await browser.newPage());
+    try {
+      await new_page.goto(
+        `https://career.habr.com/vacancies?page=${current_page}&q=react&type=suitable`
+      );
+      bar1.update(40);
 
-  const array_name = await page.evaluate(() => {
-    const name = Array.from(
-      document.querySelectorAll(".vacancy-card__title-link"),
-      (el) => el.innerText
-    );
-    return name;
-  });
+      const array_name = await new_page.evaluate(() => {
+        const name = Array.from(
+          document.querySelectorAll(".vacancy-card__title-link"),
+          (el) => el.innerText
+        );
+        return name;
+      });
 
-  const array_links = await page.evaluate(() => {
-    const links = Array.from(
-      document.querySelectorAll(".vacancy-card__title-link"),
-      (el) => el.getAttribute("href")
-    );
-    return links;
-  });
+      const array_links = await new_page.evaluate(() => {
+        const links = Array.from(
+          document.querySelectorAll(".vacancy-card__title-link"),
+          (el) => el.getAttribute("href")
+        );
+        return links;
+      });
 
-  bar1.update(60);
+      bar1.update(60);
 
-  const links_combined = array_name.map(
-    (name, index) =>
-      `${index + 1}. ${name} - https://career.habr.com${array_links[index]}`
-  );
+      const pageLinksCombined = array_name.map(
+        (name, index) =>
+          `${name} - https://career.habr.com${array_links[index]}`
+      );
+
+      links_combined = links_combined.concat(pageLinksCombined);
+      all_links = all_links.concat(
+        array_links.map((link) => `https://career.habr.com${link}`)
+      );
+    } catch (error) {
+      fs.appendFileSync(
+        "error.txt",
+        `${date} - Ошибка при открытии страницы https://career.habr.com/vacancies?page=${current_page}. ${error.message}\n`,
+        "utf-8"
+      );
+    } finally {
+      await new_page.close();
+    }
+
+    pagePromises.push(pagePromise);
+  }
+
+  await Promise.all(pagePromises);
 
   data.vacancies = links_combined.map((link) => link.replace(/ - /, " - "));
   fs.writeFileSync(`data.json`, JSON.stringify(data, null, 2), "utf-8");
 
-  await page.close();
-
-  for (let i = 0; i < array_links.length; i++) {
+  for (let i = 0; i < all_links.length; i++) {
     const new_page = await browser.newPage();
     const pagePromise = new_page
-      .goto(`https://career.habr.com${array_links[i]}`)
+      .goto(all_links[i])
       .then(async () => {
         const array_site = await new_page.evaluate(() => {
           const site_company = document.querySelector(".company_site");
@@ -93,7 +114,7 @@ const parser = async () => {
       .catch((error) => {
         fs.appendFileSync(
           "error.txt",
-          `${date} - Ошибка при открытии страницы https://career.habr.com${array_links[i]}. ${error.message}\n`,
+          `${date} - Ошибка при открытии страницы ${all_links[i]}. ${error.message}\n`,
           "utf-8"
         );
       })
@@ -103,7 +124,7 @@ const parser = async () => {
 
     pagePromises.push(pagePromise);
 
-    bar1.update(60 + ((i + 1) / array_links.length) * 20);
+    bar1.update(60 + ((i + 1) / all_links.length) * 20);
   }
 
   await Promise.all(pagePromises);
@@ -150,7 +171,7 @@ const parser = async () => {
 
     pagePromises.push(pagePromise);
 
-    bar1.update(60 + ((i + 1) / all_sites.length) * 20);
+    bar1.update(80 + ((i + 1) / all_sites.length) * 20);
   }
 
   await Promise.all(pagePromises);
