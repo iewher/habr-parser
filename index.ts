@@ -45,49 +45,52 @@ const parser = async () => {
   bar1.update(20);
 
   for (let current_page = 1; current_page <= 5; current_page++) {
-    const pagePromise = (new_page = await browser.newPage());
-    try {
-      await new_page.goto(
+    const new_page = await browser.newPage();
+    const pagePromise = new_page
+      .goto(
         `https://career.habr.com/vacancies?page=${current_page}&q=react&type=suitable`
-      );
-      bar1.update(40);
+      )
+      .then(async () => {
+        bar1.update(40);
 
-      const array_name = await new_page.evaluate(() => {
-        const name = Array.from(
-          document.querySelectorAll(".vacancy-card__title-link"),
-          (el) => el.innerText
+        const array_name = await new_page.evaluate(() => {
+          const name = Array.from(
+            document.querySelectorAll(".vacancy-card__title-link"),
+            (el) => el.textContent
+          );
+          return name;
+        });
+
+        const array_links = await new_page.evaluate(() => {
+          const links = Array.from(
+            document.querySelectorAll(".vacancy-card__title-link"),
+            (el) => el.getAttribute("href")
+          );
+          return links;
+        });
+
+        bar1.update(60);
+
+        const pageLinksCombined = array_name.map(
+          (name, index) =>
+            `${name} - https://career.habr.com${array_links[index]}`
         );
-        return name;
-      });
 
-      const array_links = await new_page.evaluate(() => {
-        const links = Array.from(
-          document.querySelectorAll(".vacancy-card__title-link"),
-          (el) => el.getAttribute("href")
+        links_combined = links_combined.concat(pageLinksCombined);
+        all_links = all_links.concat(
+          array_links.map((link) => `https://career.habr.com${link}`)
         );
-        return links;
+      })
+      .catch((error) => {
+        fs.appendFileSync(
+          "error.txt",
+          `${date} - Ошибка при открытии страницы https://career.habr.com/vacancies?page=${current_page}. ${error.message}\n`,
+          "utf-8"
+        );
+      })
+      .finally(async () => {
+        await new_page.close();
       });
-
-      bar1.update(60);
-
-      const pageLinksCombined = array_name.map(
-        (name, index) =>
-          `${name} - https://career.habr.com${array_links[index]}`
-      );
-
-      links_combined = links_combined.concat(pageLinksCombined);
-      all_links = all_links.concat(
-        array_links.map((link) => `https://career.habr.com${link}`)
-      );
-    } catch (error) {
-      fs.appendFileSync(
-        "error.txt",
-        `${date} - Ошибка при открытии страницы https://career.habr.com/vacancies?page=${current_page}. ${error.message}\n`,
-        "utf-8"
-      );
-    } finally {
-      await new_page.close();
-    }
 
     pagePromises.push(pagePromise);
   }
@@ -104,7 +107,7 @@ const parser = async () => {
       .then(async () => {
         const array_site = await new_page.evaluate(() => {
           const site_company = document.querySelector(".company_site");
-          return site_company ? site_company.innerText : null;
+          return site_company ? site_company.textContent : null;
         });
 
         if (array_site && !all_sites.includes(array_site)) {
