@@ -1,41 +1,6 @@
 const puppeteer = require("puppeteer");
 const fs = require("fs");
 const cliProgress = require("cli-progress");
-const nodemailer = require("nodemailer");
-const data = require("./data.json");
-
-/* 
-В поле smtp вставляем сервер простой протокол передачи почты:
-smtp всегда начинается с smtp.example.ru
-Пример:
-smpt.mail.ru
-*/
-
-const smtp = "";
-
-/* 
-В поле subject вставляем заголовок, который хотим отправлять
-*/
-
-const subject = "";
-
-/* 
-В поле mail_text вставляем текст, который хотим отправлять
-*/
-
-const mail_text = "";
-
-/* 
-В поле mail вставляем свою почту
-В поле pass вставляем пароль для внешних приложений
-*/
-
-const user = {
-  mail: "",
-  pass: "",
-};
-
-const sendto = "";
 
 const parser = async () => {
   const new_pages = [];
@@ -224,32 +189,3 @@ const parser = async () => {
 };
 
 parser();
-
-const mailsend = async () => {
-  const transporter = nodemailer.createTransport({
-    host: smtp,
-    port: 465,
-    secure: true,
-    auth: {
-      user: user.mail,
-      pass: user.pass,
-    },
-  });
-
-  const mailOptions = {
-    from: user.mail,
-    to: sendto,
-    subject: subject,
-    text: mail_text,
-  };
-
-  transporter.sendMail(mailOptions, (error, info) => {
-    if (error) {
-      console.log(`Ошибка при отправке на ${sendto}: ${error}`);
-    } else {
-      console.log(`Сообщение отправлено на ${sendto}: ${info.response}`);
-    }
-  });
-};
-
-mailsend();
