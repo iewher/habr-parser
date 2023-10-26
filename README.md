@@ -1,4 +1,4 @@
-# hhparser
+# habr-parser
 
 ### Настройка
 
@@ -39,5 +39,9 @@ data = {
     mail: [],
   };
 ```
+
+### Важно
+
+После использования `parser.ts` - не удалять файл data.json, он в дальнейшем используется в `mailsend.ts`
 
 <img src='./public/logo.png'/>
