@@ -20,7 +20,7 @@ const parser = async () => {
       format:
         "[{bar}] {percentage}% | Завершено: {value}/{total} | Осталось времени: {eta_formatted}",
     },
-    cliProgress.Presets.shades_classic
+    cliProgress.Presets.shades_classic,
   );
 
   const time = new Date();
@@ -47,7 +47,7 @@ const parser = async () => {
   const processPagesConcurrently = async (
     startPage,
     endPage,
-    concurrentPages
+    concurrentPages,
   ) => {
     for (
       let current_page = startPage;
@@ -105,14 +105,14 @@ const parser = async () => {
     const new_page = await browser.newPage();
     try {
       await new_page.goto(
-        `https://career.habr.com/vacancies?page=${current_page}`
+        `https://career.habr.com/vacancies?page=${current_page}`,
       );
       bar1.update(40);
 
       const array_name = await new_page.evaluate(() => {
         const name = Array.from(
           document.querySelectorAll(".vacancy-card__title-link"),
-          (el) => el.textContent
+          (el) => el.textContent,
         );
         return name;
       });
@@ -120,25 +120,25 @@ const parser = async () => {
       const array_links = await new_page.evaluate(() => {
         const links = Array.from(
           document.querySelectorAll(".vacancy-card__title-link"),
-          (el) => el.getAttribute("href")
+          (el) => el.getAttribute("href"),
         );
         return links;
       });
 
       const pageLinksCombined = array_name.map(
         (name, index) =>
-          `${name} - https://career.habr.com${array_links[index]}`
+          `${name} - https://career.habr.com${array_links[index]}`,
       );
 
       links_combined = links_combined.concat(pageLinksCombined);
       all_links = all_links.concat(
-        array_links.map((link) => `https://career.habr.com${link}`)
+        array_links.map((link) => `https://career.habr.com${link}`),
       );
     } catch (error) {
       fs.appendFileSync(
         "error.txt",
         `${date} - Ошибка при открытии страницы https://career.habr.com/vacancies?page=${current_page}. ${error.message}\n`,
-        "utf-8"
+        "utf-8",
       );
     } finally {
       await new_page.close();
@@ -174,7 +174,7 @@ const parser = async () => {
       fs.appendFileSync(
         "error.txt",
         `${date} - Ошибка при открытии страницы ${link}. ${error.message}\n`,
-        "utf-8"
+        "utf-8",
       );
     } finally {
       await new_page.close();
@@ -193,7 +193,7 @@ const parser = async () => {
       fs.appendFileSync(
         "log.txt",
         `${date} - Страница успешно открыта ${site}\n`,
-        "utf-8"
+        "utf-8",
       );
 
       const hrefValue = await new_page.evaluate(() => {
@@ -211,7 +211,7 @@ const parser = async () => {
       fs.appendFileSync(
         "error.txt",
         `${date} - Ошибка при открытии страницы ${site}. ${error.message}\n`,
-        "utf-8"
+        "utf-8",
       );
     } finally {
       await new_page.close();

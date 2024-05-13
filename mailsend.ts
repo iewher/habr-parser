@@ -81,10 +81,10 @@ const mailsend = async () => {
     };
 
     transporter.sendMail(mailOptions, (error, info) => {
-      if (error) {
-        console.log(`Ошибка при отправке на ${sendto}: ${error}`);
-      } else {
+      try {
         console.log(`Сообщение отправлено на ${sendto}: ${info.response}`);
+      } catch (err) {
+        console.log(`Ошибка при отправке на ${sendto}: ${error}`);
       }
     });
   });
