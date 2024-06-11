@@ -1,3 +1,5 @@
+![logo](public/logo.png)
+
 # habr-parser
 
 Автоматическая рассылка сообщений на почту работодателя
@@ -62,5 +64,3 @@ data = {
 ### Важно
 
 После использования `parser.ts` - не удалять файл data.json, он в дальнейшем используется в `mailsend.ts`
-
-<img src='./public/logo.png'/>
