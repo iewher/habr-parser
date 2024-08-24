@@ -37,6 +37,12 @@ _           _
 	fmt.Print("Количество страниц для обработки: ")
 	fmt.Fscan(os.Stdin, &countPages)
 
+	// Ограничить количество обрабатываемых страниц.
+	if countPages < 1 || countPages > 200 {
+		fmt.Printf("Неверное значение %v, введите не меньше 1 и не более 200", countPages)
+		return
+	}
+
 	fmt.Println("\n\nПарсер запущен")
 
 	var wg sync.WaitGroup
