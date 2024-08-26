@@ -1,5 +1,5 @@
-parser:
+parse:
 	go run parser/main.go
 
-mail:
+mailer:
 	go run mail/main.go
