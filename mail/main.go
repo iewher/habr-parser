@@ -53,14 +53,8 @@ _           _
 		log.Fatal(err)
 	}
 
-	var subject string
-	var mailText string
-
-	fmt.Print("\nЗаголовок: ")
-	fmt.Fscan(os.Stdin, &subject)
-
-	fmt.Printf("\nТекст сообщения: \n")
-	fmt.Fscan(os.Stdin, &mailText)
+	subject := "/* введите сюда заголовок */"
+	mailText := `/* введите сюда сообщение */`
 
 	// В дальнейшем можно убрать эти поля.
 	// Позволить пользователю самому выбирать с какой почты отсылать сообщение.
