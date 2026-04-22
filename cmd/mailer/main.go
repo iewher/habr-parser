@@ -30,6 +30,8 @@ _           _
 
 	mail := os.Getenv("MAIL")
 	password := os.Getenv("PASSWORD")
+	subject := os.Getenv("MESSAGE_SUBJECT")
+	mailText := os.Getenv("MESSAGE_TEXT")
 
 	// Загрузка данных из JSON.
 	dataFile, err := os.Open("data.json")
@@ -42,9 +44,6 @@ _           _
 	if err := json.NewDecoder(dataFile).Decode(&data); err != nil {
 		log.Fatal(err)
 	}
-
-	subject := "/* введите сюда заголовок */"
-	mailText := `/* введите сюда сообщение */`
 
 	smtpHost := "smtp.yandex.ru"
 	smtpPort := 465

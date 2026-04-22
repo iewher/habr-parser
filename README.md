@@ -9,8 +9,13 @@
 1. Создать файл `.env` в корне проекта:
 
 ```bash
-MAIL="your-mail@yandex.ru"
-PASSWORD="your-mail-password"
+# Mail settings
+MAIL=your_email@yandex.ru
+PASSWORD=your_app_password
+
+# Message settings
+MESSAGE_SUBJECT="subject for email message"
+MESSAGE_TEXT="text for email message"
 ```
 
 > **Важно:** Используйте пароль приложения, а не основной пароль от почты.
