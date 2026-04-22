@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 	"sync"
 	"time"
@@ -21,6 +22,7 @@ type ParserProps struct {
 func main() {
 	var countPages int
 	var grade string
+	var salary string
 
 	logo := `
 _           _                                              
@@ -52,6 +54,9 @@ _           _
 Выберите грейд, по которому будет осуществляться поиск: `,
 	)
 	fmt.Fscan(os.Stdin, &grade)
+
+	fmt.Print(`Укажите минимальную заработную плату: `)
+	fmt.Fscan(os.Stdin, &salary)
 
 	fmt.Println("\n\nПарсер запущен")
 
@@ -88,10 +93,7 @@ _           _
 			sem <- struct{}{}
 			defer func() { <-sem }()
 
-			url := fmt.Sprintf("https://career.habr.com/vacancies?page=%d&type=all", page)
-			if grade != "" && grade != "0" {
-				url = fmt.Sprintf("https://career.habr.com/vacancies?page=%d&qid=%s&type=all", page, grade)
-			}
+			url := generateUrl(page, grade, salary)
 
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
@@ -259,4 +261,25 @@ _           _
 	fmt.Println("\nКоличество обработанных вакансий: ", len(links))
 	fmt.Println("Количество обработанных сайтов: ", len(sites))
 	fmt.Println("Количество обработанных почтовых адресов: ", len(mails))
+}
+
+// Generate url
+func generateUrl(page int, grade, salary string) string {
+	base, _ := url.Parse("https://career.habr.com/vacancies")
+
+	params := url.Values{}
+	params.Add("page", fmt.Sprintf("%d", page))
+	params.Add("type", "all")
+
+	if grade != "" && grade != "0" {
+		params.Add("qid", grade)
+	}
+
+	if salary != "" {
+		params.Add("salary", salary)
+		params.Add("with_salary", "true")
+	}
+
+	base.RawQuery = params.Encode()
+	return base.String()
 }
