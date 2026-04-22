@@ -20,6 +20,7 @@ type ParserProps struct {
 
 func main() {
 	var countPages int
+	var grade string
 
 	logo := `
 _           _                                              
@@ -39,6 +40,18 @@ _           _
 		fmt.Printf("Неверное значение %v, введите не меньше 1 и не более 200\n", countPages)
 		return
 	}
+
+	fmt.Print(`
+[0] - Все
+[1] - Стажер
+[2] - Младший
+[3] - Средний
+[4] - Старший
+[5] - Ведущий
+
+Выберите грейд, по которому будет осуществляться поиск: `,
+	)
+	fmt.Fscan(os.Stdin, &grade)
 
 	fmt.Println("\n\nПарсер запущен")
 
@@ -76,6 +89,9 @@ _           _
 			defer func() { <-sem }()
 
 			url := fmt.Sprintf("https://career.habr.com/vacancies?page=%d&type=all", page)
+			if grade != "" && grade != "0" {
+				url = fmt.Sprintf("https://career.habr.com/vacancies?page=%d&qid=%s&type=all", page, grade)
+			}
 
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
