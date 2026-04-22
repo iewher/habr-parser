@@ -6,13 +6,11 @@ import (
 	"log"
 	"os"
 
-	"github.com/joho/godotenv"
-	"gopkg.in/gomail.v2"
-)
+	"habrparser/internal/mailer"
+	"habrparser/pkg/models"
 
-type MailProps struct {
-	Mail []string
-}
+	"github.com/joho/godotenv"
+)
 
 func main() {
 	err := godotenv.Load()
@@ -40,7 +38,7 @@ _           _
 	}
 	defer dataFile.Close()
 
-	var data MailProps
+	var data models.ParserResult
 	if err := json.NewDecoder(dataFile).Decode(&data); err != nil {
 		log.Fatal(err)
 	}
@@ -48,27 +46,20 @@ _           _
 	subject := "/* введите сюда заголовок */"
 	mailText := `/* введите сюда сообщение */`
 
-	// В дальнейшем можно убрать эти поля.
-	// Позволить пользователю самому выбирать с какой почты отсылать сообщение.
 	smtpHost := "smtp.yandex.ru"
 	smtpPort := 465
 
-	// Отправка писем
-	for _, sendTo := range data.Mail {
-		m := gomail.NewMessage()
-		m.SetHeader("From", mail)
-		m.SetHeader("To", sendTo)
-		m.SetHeader("Subject", subject)
-		m.SetBody("text/plain", mailText)
-
-		d := gomail.NewDialer(smtpHost, smtpPort, mail, password)
-
-		if err := d.DialAndSend(m); err != nil {
-			log.Printf("Ошибка при отправке на %s: %v", sendTo, err)
-		} else {
-			log.Printf("Сообщение отправлено на %s", sendTo)
-		}
+	config := &models.MailConfig{
+		SMTPHost:     smtpHost,
+		SMTPPort:     smtpPort,
+		FromEmail:    mail,
+		FromPassword: password,
+		Subject:      subject,
+		Body:         mailText,
 	}
 
-	log.Println("Отправленные адреса:", data.Mail)
+	m := mailer.NewMailer(config)
+	if err := m.SendToEmails(data.Emails); err != nil {
+		log.Fatal("Ошибка при отправке писем:", err)
+	}
 }

@@ -1,5 +1,7 @@
-parse:
-	go run parser/main.go
+.PHONY: parser mailer
+
+parser:
+	go run ./cmd/parser
 
 mailer:
-	go run mail/main.go
+	go run ./cmd/mailer
