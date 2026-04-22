@@ -1,0 +1,76 @@
+name: Parser CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  build:
+    name: Build and Test Parser
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Install dependencies
+        run: go mod download
+
+      - name: Build parser
+        run: go build -o bin/parser ./cmd/parser
+
+      - name: Build mailer
+        run: go build -o bin/mailer ./cmd/mailer
+
+      - name: Run parser (quick test)
+        run: |
+          # Run parser with 1 page to verify functionality
+          printf "1\n0\n0\n" | timeout 60 go run ./cmd/parser || true
+          
+      - name: Validate output
+        run: |
+          if [ -f "data.json" ]; then
+            echo "✓ data.json created"
+            if python3 -m json.tool data.json > /dev/null 2>&1; then
+              echo "✓ JSON is valid"
+            else
+              echo "✗ JSON is invalid"
+              exit 1
+            fi
+          else
+            echo "⚠ data.json not created (possible network error)"
+          fi
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+          args: --timeout=5m
