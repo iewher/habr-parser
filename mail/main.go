@@ -6,19 +6,20 @@ import (
 	"log"
 	"os"
 
+	"github.com/joho/godotenv"
 	"gopkg.in/gomail.v2"
 )
-
-type Config struct {
-	Mail string
-	Pass string
-}
 
 type MailProps struct {
 	Mail []string
 }
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
 	logo := `
 _           _                                              
 | |__   __ _| |__  _ __      _ __   __ _ _ __ ___  ___ _ __ 
@@ -29,17 +30,8 @@ _           _
 `
 	fmt.Println(logo)
 
-	// Загрузка конфигурации из JSON.
-	configFile, err := os.Open("config.json")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer configFile.Close()
-
-	var config Config
-	if err := json.NewDecoder(configFile).Decode(&config); err != nil {
-		log.Fatal(err)
-	}
+	mail := os.Getenv("MAIL")
+	password := os.Getenv("PASSWORD")
 
 	// Загрузка данных из JSON.
 	dataFile, err := os.Open("data.json")
@@ -64,12 +56,12 @@ _           _
 	// Отправка писем
 	for _, sendTo := range data.Mail {
 		m := gomail.NewMessage()
-		m.SetHeader("From", config.Mail)
+		m.SetHeader("From", mail)
 		m.SetHeader("To", sendTo)
 		m.SetHeader("Subject", subject)
 		m.SetBody("text/plain", mailText)
 
-		d := gomail.NewDialer(smtpHost, smtpPort, config.Mail, config.Pass)
+		d := gomail.NewDialer(smtpHost, smtpPort, mail, password)
 
 		if err := d.DialAndSend(m); err != nil {
 			log.Printf("Ошибка при отправке на %s: %v", sendTo, err)
