@@ -2,7 +2,7 @@
 
 # Habr-parser
 
-Полностью автоматизированный сбор адресов электронной почты работодателей и рассылка объявлений о вакансиях.
+Полностью автоматизированный сбор адресов электронной почты работодателей и массовая рассылка резюме.
 
 ## Настройка
 
@@ -16,9 +16,12 @@ PASSWORD=your_app_password
 # Message settings
 MESSAGE_SUBJECT="subject for email message"
 MESSAGE_TEXT="text for email message"
+MESSAGE_HTML_TEMPLATE="C:/Users/user/Downloads/resume.html" # Опционально
 ```
 
 > **Важно:** Используйте пароль приложения, а не основной пароль от почты.
+
+Предпочтительным способом остается `HTML`-вариант, так что если вы укажите `MESSAGE_HTML_TEMPLATE`, `MESSAGE_TEXT` не будет отправлен.
 
 ## Запуск
 

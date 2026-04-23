@@ -18,4 +18,5 @@ type MailConfig struct {
 	FromPassword string `json:"from_password"`
 	Subject      string `json:"subject"`
 	Body         string `json:"body"`
+	HTMLBody     string `json:"html_body"`
 }

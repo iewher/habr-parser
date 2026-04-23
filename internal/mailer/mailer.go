@@ -39,6 +39,10 @@ func (m *Mailer) SendToEmails(emails []string) error {
 		msg.SetHeader("Subject", m.Config.Subject)
 		msg.SetBody("text/plain", m.Config.Body)
 
+		if m.Config.HTMLBody != "" {
+			msg.AddAlternative("text/html", m.Config.HTMLBody)
+		}
+
 		if err := d.DialAndSend(msg); err != nil {
 			log.Printf("Ошибка при отправке на %s: %v", sendTo, err)
 		} else {

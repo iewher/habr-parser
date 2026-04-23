@@ -32,6 +32,16 @@ _           _
 	password := os.Getenv("PASSWORD")
 	subject := os.Getenv("MESSAGE_SUBJECT")
 	mailText := os.Getenv("MESSAGE_TEXT")
+	htmlTemplatePath := os.Getenv("MESSAGE_HTML_TEMPLATE")
+
+	var mailHTML string
+	if htmlTemplatePath != "" {
+		htmlTemplateFile, err := os.ReadFile(htmlTemplatePath)
+		if err != nil {
+			log.Fatal("Ошибка чтения HTML-шаблона из", htmlTemplatePath, ":", err)
+		}
+		mailHTML = string(htmlTemplateFile)
+	}
 
 	// Загрузка данных из JSON.
 	dataFile, err := os.Open("data.json")
@@ -55,6 +65,7 @@ _           _
 		FromPassword: password,
 		Subject:      subject,
 		Body:         mailText,
+		HTMLBody:     mailHTML,
 	}
 
 	m := mailer.NewMailer(config)
